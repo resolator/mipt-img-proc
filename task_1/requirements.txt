@@ -1,4 +1,4 @@
 numpy
 tqdm
 joblib
-cv2
+opencv-python
