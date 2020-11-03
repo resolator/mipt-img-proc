@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*
 """Demosaicing realization of VNG for "Image processing" course."""
 import cv2
+import time
 import argparse
 
 import numpy as np
@@ -17,6 +18,8 @@ def get_args():
                         help='Path to source GRAY image.')
     parser.add_argument('--save-to', required=True,
                         help='Path to save img result.')
+    parser.add_argument('--opencv', action='store_true',
+                        help='Use OpenCV demosaicing.')
 
     return parser.parse_args()
 
@@ -340,11 +343,19 @@ def main():
     # read
     bayer_img = cv2.imread(args.src_img, cv2.IMREAD_GRAYSCALE)
 
-    # create expand img for ks=5 convolution
-    bayer_img = cv2.copyMakeBorder(bayer_img, 2, 2, 2, 2, cv2.BORDER_REFLECT)
+    start_t = time.time()
+    if args.opencv:
+        processed_img = cv2.cvtColor(bayer_img, cv2.COLOR_BAYER_BG2BGR)
+    else:
+        # create expand img for ks=5 convolution
+        bayer_img = cv2.copyMakeBorder(
+            bayer_img, 2, 2, 2, 2, cv2.BORDER_REFLECT)
 
-    # process
-    processed_img = make_demosaicing(bayer_img)
+        # process
+        processed_img = make_demosaicing(bayer_img)
+
+    res_time = time.time() - start_t
+    print(f'Consumed time {res_time} seconds.')
 
     # save
     cv2.imwrite(args.save_to, processed_img)
