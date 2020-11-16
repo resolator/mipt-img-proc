@@ -35,7 +35,7 @@ def main():
     mse = np.power(src_gray - dst_gray, 2).sum() / divider
 
     psnr = 10 * np.log10(255**2 / mse)
-    print('PSNR:', psnr)
+    print('PSNR:', np.round(psnr, 4))
 
 
 if __name__ == '__main__':
