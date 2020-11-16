@@ -7,6 +7,7 @@ import argparse
 import numpy as np
 
 from tqdm import tqdm
+from pathlib import Path
 from joblib import Parallel, delayed
 
 
@@ -32,8 +33,8 @@ def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--img-path', required=True,
                         help='Path to input image.')
-    parser.add_argument('--save-to', required=True,
-                        help='Path to save image.')
+    parser.add_argument('--save-to', type=Path, required=True,
+                        help='Path to save dir.')
     parser.add_argument('--block-size', type=int, default=4, choices=[4, 8],
                         help='Block size for patterns.')
     parser.add_argument('--workers', type=int, default=1,
@@ -167,14 +168,14 @@ def restore_step(img, transforms, block_sz):
     return res
 
 
-def fractal_decode(transforms, dst_sz, iters=8):
+def fractal_decode(transforms, dst_sz, save_to, iters=8):
     iterations = [np.random.randint(0, 256, (transforms.shape[0] * dst_sz,
                                              transforms.shape[1] * dst_sz))]
 
-    for _ in tqdm(range(iters), desc='Restoring iteration'):
+    for i in tqdm(range(iters), desc='Restoring iteration'):
         iterations.append(restore_step(iterations[-1], transforms, dst_sz))
-
-    return iterations[-1]
+        cv2.imwrite(str(save_to.joinpath(f'result_{i + 1}.png')),
+                    iterations[-1])
 
 
 def main():
@@ -189,10 +190,9 @@ def main():
         img = shrink(img, 4)
 
     transforms = fractal_encode(img, args.block_size, args.workers)
-    res = fractal_decode(transforms, args.block_size, args.iters)
 
-    # save
-    cv2.imwrite(args.save_to, res)
+    args.save_to.mkdir(exist_ok=True, parents=True)
+    fractal_decode(transforms, args.block_size, args.save_to, args.iters)
 
 
 if __name__ == '__main__':
