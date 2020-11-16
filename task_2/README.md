@@ -3,7 +3,7 @@ Implement fractal compression for 256x256 grayscale images.
 
 ## Usage
 
-```bash
+```
 usage: main.py [-h] --img-path IMG_PATH --save-to SAVE_TO [--block-size {4,8}] [--workers WORKERS]
                [--iters ITERS] [--shrink]
 
@@ -24,7 +24,7 @@ To speed up processing set the `--workers` option according to number of availab
 
 ## Results
 
-Resulted images contains in `data` folder.
+Resulted images are contained in `data` folder.
 
 Table with PSNR for each decoding iteration:
 
