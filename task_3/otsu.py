@@ -21,7 +21,7 @@ def get_args():
                         help='Path to save dir.')
     parser.add_argument('--bs', type=int,
                         help='Pass this arg to use blocks binarization. '
-                             'Defines block size.')
+                             'Defines block size. Recommended: 45.')
 
     return parser.parse_args()
 
@@ -67,7 +67,8 @@ def bin_otsu(img):
     return img
 
 
-def bin_blocks(img, bs=20):
+def bin_blocks(img, bs=45):
+    """Binarize image using OTSU for each block."""
     # expand image to needable size
     top, bot = 0, 0
     height_diff = img.shape[0] % bs
@@ -99,7 +100,7 @@ def bin_blocks(img, bs=20):
                 img[i:i + bs, j:j + bs][block > th] = 255
                 img[i:i + bs, j:j + bs][block <= th] = 0
 
-    # revert expand
+    # revert expanding
     if bot == 0:
         bot = -img.shape[0]
 
