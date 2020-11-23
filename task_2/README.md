@@ -24,11 +24,11 @@ To speed up processing set the `--workers` option according to number of availab
 
 ## Results
 
-Resulted images are contained in `data` folder.
+Resulted images are contained in `data` folder:
+- `data/results/*/` - directories with resulted images for each iteration
+- `data/source` - images for test
 
-Table with PSNR for each decoding iteration:
+PSNR graphics for each image:
 
-| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|
-| 28.4984 | 29.1101 | 29.8427 | 30.5541 | 31.8447 | 33.2624 | 34.3425 | 34.8555 | 35.0469 | 35.0738 |
+![psnr](data/results/psnr-joined.png)
 
