@@ -1,3 +1,4 @@
 task_1/data/** filter=lfs diff=lfs merge=lfs -text
 task_2/data/** filter=lfs diff=lfs merge=lfs -text
 task_3/data/** filter=lfs diff=lfs merge=lfs -text
+task_4/data/** filter=lfs diff=lfs merge=lfs -text
