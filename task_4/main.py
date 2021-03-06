@@ -6,7 +6,6 @@ import argparse
 
 import numpy as np
 
-from tqdm import tqdm
 from pathlib import Path
 
 
@@ -24,7 +23,7 @@ def get_args():
 
 
 def detect_kp(img, n_features=400, verbose=False):
-    # Detect
+    """Detect keypoints."""
     detector = cv2.SIFT_create(nfeatures=n_features)
     kp, des = detector.detectAndCompute(img, None)
 
@@ -42,6 +41,7 @@ def detect_kp(img, n_features=400, verbose=False):
 
 
 def match(des_1, des_2, k=2, top_matches=9):
+    """Match keypoints."""
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(des_1, des_2, k=k)
 
@@ -56,6 +56,7 @@ def match(des_1, des_2, k=2, top_matches=9):
 
 
 def extract_matched_pts(kp_1, kp_2, matches):
+    """Extract matches pts values from opecv containers."""
     pts = []
     for m in matches:
         pts_1 = np.array(kp_1[m.queryIdx].pt)
@@ -63,10 +64,11 @@ def extract_matched_pts(kp_1, kp_2, matches):
 
         pts.append([pts_1, pts_2])
 
-    return pts
+    return np.array(pts)
 
 
 def vote(matches, prev_kp, kp):
+    """Select points that have similar shift."""
     dists = []
     pts = extract_matched_pts(prev_kp, kp, matches)
 
@@ -90,14 +92,13 @@ def main():
 
     args.save_to.mkdir(exist_ok=True, parents=True)
 
-    prev_img = None
-    prev_kp, prev_des = None, None
-    for img_path in tqdm(sorted(args.frames_dir.glob('*.*'))):
+    prev_kp, prev_des, prev_name = None, None, None
+    for img_path in sorted(args.frames_dir.glob('*.*')):
         img = cv2.imread(str(img_path))
         kp, des = detect_kp(img, args.sift_features)
 
         if prev_kp is None:
-            prev_img = img
+            prev_name = img_path.name
             prev_kp = kp
             prev_des = des
             continue
@@ -106,22 +107,13 @@ def main():
 
         # voting
         matches = vote(matches, prev_kp, kp)
-        matches = [[x] for x in matches]
 
+        # extract shift
+        pts = extract_matched_pts(prev_kp, kp, matches)
+        shift = np.round(np.mean(pts[:, 1] - pts[:, 0], axis=0)).astype(int)
+        shift = {'x': shift[0], 'y': shift[1]}
 
-
-
-
-        # draw
-        img3 = cv2.drawMatchesKnn(
-            prev_img, prev_kp, img, kp, matches, None,
-            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
-        )
-        cv2.namedWindow('img', cv2.WINDOW_NORMAL)
-        cv2.imshow('img', img3)
-        cv2.waitKey()
-
-        exit()
+        print(f'Shift between {prev_name} and {img_path.name}:', shift)
 
 
 if __name__ == '__main__':
