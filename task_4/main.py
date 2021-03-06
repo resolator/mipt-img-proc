@@ -155,7 +155,8 @@ def main():
     if args.save_time_estimation:
         timestamps = np.array(timestamps)
         diffs = timestamps[1:] - timestamps[:-1]
-        plt.plot(diffs[1:])
+        diffs[0] = None
+        plt.plot(diffs)
         plt.title('Elapsed time')
         plt.xlabel('Frame number')
         plt.ylabel('Seconds')
