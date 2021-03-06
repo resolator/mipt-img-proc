@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*
 """Inter-frame shift estimator."""
 import cv2
+import time
 import argparse
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from pathlib import Path
 
@@ -15,9 +17,12 @@ def get_args():
     parser.add_argument('--frames-dir', type=Path, required=True,
                         help='Path to dir with frames for estimation.')
     parser.add_argument('--sift-features', type=int, default=400,
-                        help='Number of SIFT features to detect.')
+                        help='Number of SIFT features to detect '
+                             '(default is 400).')
     parser.add_argument('--save-to', type=Path, required=True,
-                        help='Path to save dir.')
+                        help='Path to save file.txt.')
+    parser.add_argument('--save-time-estimation', action='store_true',
+                        help='Draw and save time estimation.')
 
     return parser.parse_args()
 
@@ -29,7 +34,8 @@ def detect_kp(img, n_features=400, verbose=False):
 
     # Show detected
     if verbose:
-        img_keypoints = np.empty((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+        img_keypoints = np.empty((img.shape[0], img.shape[1], 3),
+                                 dtype=np.uint8)
         cv2.drawKeypoints(img, kp, img_keypoints)
 
         cv2.namedWindow('img', cv2.WINDOW_NORMAL)
@@ -112,10 +118,11 @@ def main():
     """Application entry point."""
     args = get_args()
 
-    args.save_to.mkdir(exist_ok=True, parents=True)
-
+    results, timestamps = [], []
     prev_kp, prev_des, prev_name = None, None, None
     for img_path in sorted(args.frames_dir.glob('*.*')):
+        timestamps.append(time.time())
+
         img = cv2.imread(str(img_path))
         kp, des = detect_kp(img, args.sift_features)
 
@@ -133,9 +140,28 @@ def main():
         # extract shift
         pts = extract_matched_pts(prev_kp, kp, matches)
         shift = np.round(np.mean(pts[:, 1] - pts[:, 0], axis=0)).astype(int)
-        shift = {'x': shift[0], 'y': shift[1]}
+        shift_d = {'x': shift[0], 'y': shift[1]}
 
-        print(f'Shift between {prev_name} and {img_path.name}:', shift)
+        print(f'Shift between {prev_name} and {img_path.name}:', shift_d)
+        results.append(shift.tolist())
+    timestamps.append(time.time())
+
+    # save results
+    args.save_to.parent.mkdir(exist_ok=True, parents=True)
+    with open(args.save_to, 'w') as f:
+        [print(x, file=f) for x in results]
+
+    # draw graphic
+    if args.save_time_estimation:
+        timestamps = np.array(timestamps)
+        diffs = timestamps[1:] - timestamps[:-1]
+        plt.plot(diffs[1:])
+        plt.title('Elapsed time')
+        plt.xlabel('Frame number')
+        plt.ylabel('Seconds')
+        plt.grid()
+
+        plt.savefig(args.save_to.parent.joinpath(args.save_to.stem + '.png'))
 
 
 if __name__ == '__main__':
