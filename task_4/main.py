@@ -40,10 +40,32 @@ def detect_kp(img, n_features=400, verbose=False):
     return kp, des
 
 
-def match(des_1, des_2, k=2, top_matches=9):
+class DMatch:
+    """OpenCV-like wrapper for match object."""
+    def __init__(self, queryIdx, trainIdx, distance):
+        self.queryIdx = queryIdx
+        self.trainIdx = trainIdx
+        self.distance = distance
+
+
+def bf_match(des_1, des_2, k=2):
+    """Brute-force keypoints matcher."""
+    res = []
+    for idx, des in enumerate(des_1):
+        dists = np.array([np.linalg.norm(des - x) for x in des_2])
+        idxes = np.argsort(dists)[:k]
+        res.append([DMatch(idx, x, d) for x, d in zip(idxes, dists[idxes])])
+
+    return res
+
+
+def match(des_1, des_2, k=2, top_matches=9, opencv_matcher=False):
     """Match keypoints."""
-    bf = cv2.BFMatcher()
-    matches = bf.knnMatch(des_1, des_2, k=k)
+    if opencv_matcher:
+        bf = cv2.BFMatcher()
+        matches = bf.knnMatch(des_1, des_2, k=k)
+    else:
+        matches = bf_match(des_1, des_2, k=k)
 
     good = []
     for m, n in matches:
