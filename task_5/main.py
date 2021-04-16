@@ -116,7 +116,7 @@ def main():
         print(det_type,
               'time per keypoint: %f milliseconds' % (np.mean(elapsed) * 1000))
         print(det_type, 'repeatability:', np.mean(rep), end='\n\n')
-        rep_frames = [np.mean(x) for x in rep_frames]
+        rep_frames = [np.mean(x) * 100 for x in rep_frames]
 
         # save plots
         if args.save_to is not None:
